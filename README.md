@@ -2,6 +2,15 @@
 
 Get information from football games for different competitions and leverage data visualization to statistically analyze and visualize the performance of football teams and players. The scripts are written and intended to use with Python 3.
 
+> **⚠️ Known limitation — the scrapers no longer return live data.**
+> The data-collection scripts (`game_data.py`, `player_in_goals.py`) scrape **ESPN Argentina** pages (`espn.com.ar/futbol/numeritos`, `/comentario`, `/partido`, `/resultados`). That site has been redesigned since this project was last updated (2018), so the hard-coded CSS classes and URL structure no longer match the live markup and the scrapers will return empty results. The scraping code has been modernized to current library APIs (Selenium 4, pandas 2, matplotlib 3) and the bugs fixed, but **reviving the ESPN data source is out of scope**. The visualization scripts still work against the sample CSVs included in the repo.
+
+## Requirements
+
+- Python 3.8+
+- The packages in `requirements.txt` (`pandas`, `numpy`, `matplotlib`, `requests`, `beautifulsoup4`, `selenium`).
+- **For the scrapers only:** Google Chrome/Chromium plus a matching [ChromeDriver](https://chromedriver.chromium.org/) available on your `PATH`. Selenium drives a real browser to collect game IDs.
+
 ## Getting Started
 
 ### 1. Clone Repo
@@ -14,6 +23,11 @@ Go in the directory of the repo and run:
 ```pip install -r requirements.txt```
 
 ### 3. Enjoy the repo :)
+
+## How to run the scripts
+
+- **Scrapers** (`game_data.py`, `player_in_goals.py`) read their settings from `constants.py` and must be run from the repository root so the `constants`/`game_data` imports resolve, e.g. `python game_data.py`. Output CSVs are written under `data/`.
+- **Graph scripts** in `radars/` and `other_graphs/*/` read a CSV that lives next to the script. Paths are now resolved relative to each script's own location, so you can run them from anywhere (e.g. `python radars/radars_graph.py`).
 
 ## What can you do?
 
@@ -69,15 +83,7 @@ The [season_analysis.py](https://github.com/andrebrener/football_data/blob/maste
   - Minutes on and off the pitch.
   - Total team goals for and against.
   - Team goals for and against with the player in the pitch.
-  
 
-  
+## License
 
-
-
-  
-
- 
-
-
-
+This project is released under the [MIT License](LICENSE).
