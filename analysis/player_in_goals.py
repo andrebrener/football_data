@@ -8,9 +8,9 @@ from constants import COMPETITION, COMPETITION_DICT, END_DATE, START_DATE
 from game_data import get_game_goals, get_games_id, get_players, get_teams
 
 
-def get_team_names(id):
+def get_team_names(game_id):
 
-    url = 'http://www.espn.com.ar/futbol/numeritos?juegoId=' + str(id)
+    url = 'http://www.espn.com.ar/futbol/numeritos?juegoId=' + str(game_id)
 
     r = requests.get(url)
     soup = BeautifulSoup(r.content, 'html.parser')
@@ -106,13 +106,12 @@ def get_red_card_times(red_times_html):
     for i in red_times:
         if '+' in i:
             index = i.index('+')
-            minute = int(red_times[i][index - 2:index]) + int(
-                red_times[i][index + 1])
+            minute = int(i[index - 2:index]) + int(i[index + 1])
         else:
             minute = int(i)
         red_card_times.append(minute)
 
-    return red_times
+    return red_card_times
 
 
 def get_red_card_names(red_html, red_times):
@@ -200,9 +199,9 @@ def player_in_goal(players_time, home_players_played, away_players_played,
     return player_in_goals
 
 
-def get_players_in_goals(id):
+def get_players_in_goals(game_id):
 
-    url = 'http://www.espn.com.ar/futbol/comentario?juegoId=' + str(id)
+    url = 'http://www.espn.com.ar/futbol/comentario?juegoId=' + str(game_id)
     r = requests.get(url)
     soup = BeautifulSoup(r.content, 'html.parser')
 
@@ -214,15 +213,16 @@ def get_players_in_goals(id):
     red_times_html = soup.find_all("span", {"data-event-type": "red-card"})
     red_html = soup.find_all("div", {"class": "detail"})
 
-    teams_temp = get_team_names(id)
-    if teams_temp is None:
+    teams = get_team_names(game_id)
+    if teams is None:
         return None
-    home_team, away_team = get_team_names(id)
+    home_team, away_team = teams
 
-    if get_players(players_html) is None:
+    players = get_players(players_html)
+    if players is None:
         return None
-    home_players, away_players = get_players(players_html)
-    home_goals_sorted, away_goals_sorted = get_game_goals(id)
+    home_players, away_players = players
+    home_goals_sorted, away_goals_sorted = get_game_goals(game_id)
 
     end_of_game = get_end_of_game(end_of_game_html)
     subs = get_subs(subs_html, subs_times_html)
@@ -256,9 +256,9 @@ def get_players_data(games_id):
     total_team_data = {}
     for game, day in games_id:
         print(game)
-        if get_players_in_goals(game) is not None:
-            player_data, team_time, team_goal_difference = get_players_in_goals(
-                game)
+        result = get_players_in_goals(game)
+        if result is not None:
+            player_data, team_time, team_goal_difference = result
             for team in team_time.keys():
                 if team in total_team_data:
                     total_team_data[team][0] += team_time[team]
@@ -296,7 +296,7 @@ def dict_to_list(d):
     dictlist = []
     for key, value in d.items():
         temp = [
-            key.encode('ASCII', 'replace'), value[0], value[1], value[2],
+            key, value[0], value[1], value[2],
             value[3], value[4], value[5], value[6]
         ]
         dictlist.append(temp)

@@ -7,6 +7,7 @@ import pandas as pd
 
 from bs4 import BeautifulSoup
 from selenium.webdriver import Chrome
+from selenium.webdriver.common.by import By
 from selenium.webdriver.chrome.options import Options
 
 from constants import COMPETITION, COMPETITION_DICT, END_DATE, START_DATE
@@ -17,32 +18,32 @@ def date_range(start_date, end_date):
         yield (start_date + timedelta(n)).strftime('%Y%m%d')
 
 
-def get_games_id(comp):
+def get_games_id(start_date, end_date, comp):
 
-    dates = [d for d in date_range(START_DATE, END_DATE)]
+    dates = [d for d in date_range(start_date, end_date)]
     games_id = []
 
     chrome_options = Options()
     chrome_options.add_argument('--dns-prefetch-disable')
-    driver = Chrome(chrome_options=chrome_options)
+    driver = Chrome(options=chrome_options)
 
-    for day in dates:
-        driver.get(
-            'http://www.espn.com.ar/futbol/resultados/_/liga/{}/fecha/{}'.
-            format(comp, day)
-        )
+    try:
+        for day in dates:
+            driver.get(
+                'http://www.espn.com.ar/futbol/resultados/_/liga/{}/fecha/{}'.
+                format(comp, day)
+            )
 
-        game_link_driver = driver.find_elements_by_class_name(
-            'mobileScoreboardLink  '
-        )
+            game_link_driver = driver.find_elements(
+                By.CLASS_NAME, 'mobileScoreboardLink'
+            )
 
-        for game_driver in game_link_driver:
-            game_id = game_driver.get_attribute('href')[46:53]
-            games_id.append((game_id, day))
+            for game_driver in game_link_driver:
+                game_id = game_driver.get_attribute('href')[46:53]
+                games_id.append((game_id, day))
+    finally:
+        driver.quit()
 
-        driver.quit
-
-    # print(games_id)
     return games_id
 
 
@@ -61,7 +62,7 @@ def get_score(html):
     return score
 
 
-def get_possesion_values(possession_html):
+def get_possession_values(possession_html):
 
     if not len(possession_html):
         return [0, 0]
@@ -182,9 +183,9 @@ def penalty_attribution(shooters, home_players, away_players):
     return home_penalties, away_penalties
 
 
-def get_penalties(id):
+def get_penalties(game_id):
 
-    url = 'http://www.espn.com.ar/futbol/partido?juegoId=' + str(id)
+    url = 'http://www.espn.com.ar/futbol/partido?juegoId=' + str(game_id)
 
     r = requests.get(url)
     soup = BeautifulSoup(r.content, 'html.parser')
@@ -352,9 +353,9 @@ def two_zero_team(home_goals, away_goals, top_minutes):
     return two_zero
 
 
-def get_game_goals(id):
+def get_game_goals(game_id):
 
-    url = 'http://www.espn.com.ar/futbol/comentario?juegoId=' + str(id)
+    url = 'http://www.espn.com.ar/futbol/comentario?juegoId=' + str(game_id)
     r = requests.get(url)
     soup = BeautifulSoup(r.content, 'html.parser')
 
@@ -379,11 +380,11 @@ def get_game_goals(id):
     return home_goals, away_goals
 
 
-def get_game_data(id, day, two_zero_minutes=200):
+def get_game_data(game_id, day, two_zero_minutes=200):
 
-    print(id)
+    print(game_id)
 
-    url = 'http://www.espn.com.ar/futbol/numeritos?juegoId=' + str(id)
+    url = 'http://www.espn.com.ar/futbol/numeritos?juegoId=' + str(game_id)
 
     r = requests.get(url)
     soup = BeautifulSoup(r.content, 'html.parser')
@@ -399,13 +400,13 @@ def get_game_data(id, day, two_zero_minutes=200):
 
     home_goals = get_score(home_html)
     away_goals = get_score(away_html)
-    pos_percentage = get_possesion_values(possession_html)
+    pos_percentage = get_possession_values(possession_html)
     teams = get_teams(teams_html)
     shots = get_shots(shots_html)
     fouls = get_fouls(fouls_html)
     yellow = get_cards(yellow_html)
     red = get_cards(red_html)
-    goal_minutes = get_game_goals(id)
+    goal_minutes = get_game_goals(game_id)
 
     if not teams or not shots:
         return None
@@ -427,7 +428,7 @@ def get_game_data(id, day, two_zero_minutes=200):
         two_zero = teams[1]
 
     game = [
-        id, day, teams[0], teams[1], home_goals, away_goals, shots[0][0],
+        game_id, day, teams[0], teams[1], home_goals, away_goals, shots[0][0],
         shots[0][1], shots[1][0], shots[1][1], pos_percentage[0],
         pos_percentage[1], fouls[0], fouls[1], yellow[0], yellow[1], red[0],
         red[1], first_goal, two_zero
@@ -475,10 +476,10 @@ def run_game_data(games_id):
     return list_of_games_data
 
 
-def main():
+def main(start_date, end_date, competition, competitions):
 
-    comp = COMPETITION_DICT[COMPETITION]
-    games_id = get_games_id(comp)
+    comp = competitions[competition]
+    games_id = get_games_id(start_date, end_date, comp)
     list_of_games_data = run_game_data(games_id)
 
     df = pd.DataFrame(list_of_games_data)
@@ -500,7 +501,7 @@ def main():
     os.makedirs(path, exist_ok=True)
 
     file_name = os.path.join(
-        path, 'games_data_{}_{}.csv'.format(START_DATE, END_DATE)
+        path, 'games_data_{}_{}.csv'.format(start_date, end_date)
     )
 
     df.to_csv(file_name, index=False)
@@ -509,6 +510,4 @@ def main():
 
 if __name__ == '__main__':
 
-    competition = 'primera_division'
-
-    main()
+    main(START_DATE, END_DATE, COMPETITION, COMPETITION_DICT)
