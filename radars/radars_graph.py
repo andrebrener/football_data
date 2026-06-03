@@ -1,3 +1,5 @@
+import os
+
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -88,7 +90,7 @@ def plot_graph(df, stats, players_plot):
     fig = plt.figure(figsize=(9, 9))
     radar = ComplexRadar(fig, stat_names, stat_ranges)
 
-    for pl, bc, fc in players:
+    for pl, bc, fc in players_plot:
         radar.plot(df[pl], bc)
         radar.fill(df[pl], fc, alpha=0.2)
     plt.show()
@@ -96,7 +98,8 @@ def plot_graph(df, stats, players_plot):
 
 if __name__ == '__main__':
 
-    file_path = 'players_data_2016.csv'
+    file_path = os.path.join(
+        os.path.dirname(os.path.abspath(__file__)), 'players_data_2016.csv')
     df = pd.read_csv(file_path, sep=';', index_col=0).T.reset_index()
 
     player_cols = [col for col in df.columns if col != 'index']

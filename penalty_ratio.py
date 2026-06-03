@@ -3,7 +3,8 @@
 #        Author: Andre Brener
 #       Created: 29 Sep 2017
 # Last Modified: 29 Sep 2017
-#   Description: description
+#   Description: Rank teams by penalties won and conceded per game and plot
+#                the top teams.
 # =============================================================================
 import os
 
@@ -11,9 +12,12 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 
+from constants import TEAM_DICT
+
 plt.style.use('fivethirtyeight')
 
-data_dir = os.path.join('data', 'game_data')
+DATA_DIR = os.path.join(
+    os.path.dirname(os.path.abspath(__file__)), 'data', 'game_data')
 
 
 def load_data(data_dir):
@@ -23,7 +27,6 @@ def load_data(data_dir):
     ]
     df_list = [pd.read_csv(os.path.join(data_dir, f)) for f in file_list]
     df = pd.concat(df_list)
-    # print(df[df['home_name']=='IND'])
     return df
 
 
@@ -56,7 +59,6 @@ def group_team_penalties(df, against=False):
 def get_final_df(grp_dfs):
     total_df = grp_dfs[0]
     for df in grp_dfs[1:]:
-        # print(df)
         total_df = pd.merge(total_df, df)
 
     return total_df
@@ -107,13 +109,7 @@ def get_graph(df_dict, teams_in_graph, team_dict):
         plt.ylim(0, 1.15 * df[col][:teams_in_graph].max())
         plt.legend()
         plt.ylabel('Penales por partido')
-        plt.xticks(
-            x,
-            team_names,
-            color='0.3',
-            fontsize=13,
-            # rotation='vertical'
-        )
+        plt.xticks(x, team_names, color='0.3', fontsize=13)
         sub_title = 'Penales {} por partido'.format(title_term)
         ax.text(
             0.4,
@@ -138,40 +134,5 @@ def get_graph(df_dict, teams_in_graph, team_dict):
 
 if __name__ == '__main__':
 
-    team_dict = {
-        'CABJ': 'Boca',
-        'CARP': 'River',
-        'SL': 'San Lorenzo',
-        'ALDO': 'Aldosivi',
-        'ARS': 'Arsenal',
-        'BAN': 'Banfield',
-        'BEL': 'Belgrano',
-        'CAP': 'Patronato',
-        'COL': 'Colón',
-        'DYJ': 'Defensa y Justicia',
-        'EST': 'Estudiantes',
-        'GCM': 'Godoy Cruz',
-        'GLP': 'GELP',
-        'HUR': 'Huracán',
-        'IND': 'Independiente',
-        'LAN': 'Lanús',
-        'NOB': 'Newells',
-        'OBB': 'Olimpo',
-        'QUI': 'Quilmes',
-        'RAC': 'Racing',
-        'RAF': 'A. Rafaela',
-        'ROS': 'R. Central',
-        'SARM': 'Sarmiento',
-        'SMSJ': 'San Martin SJ',
-        'TDC': 'Talleres',
-        'TEMP': 'Temperley',
-        'TIG': 'Tigre',
-        'TUC': 'A. Tucuman',
-        'USF': 'Unión',
-        'VEL': 'Velez',
-        'ARGJ': 'Argentinos Jrs',
-        'CHA': 'Chacarita'
-    }
-
-    df_dict = get_calculations(data_dir)
-    get_graph(df_dict, 8, team_dict)
+    df_dict = get_calculations(DATA_DIR)
+    get_graph(df_dict, 8, TEAM_DICT)
