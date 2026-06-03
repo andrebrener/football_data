@@ -26,7 +26,10 @@ Go in the directory of the repo and run:
 
 ## How to run the scripts
 
-- **Scrapers** (`game_data.py`, `player_in_goals.py`) read their settings from `constants.py` and must be run from the repository root so the `constants`/`game_data` imports resolve, e.g. `python game_data.py`. Output CSVs are written under `data/`.
+Layout: `constants.py` and the shared scraper `game_data.py` live at the repo root; the analysis scripts are grouped under `analysis/`; standalone graph scripts live in `radars/` and `other_graphs/*/`.
+
+- **Scraper core** `game_data.py` reads its settings from `constants.py`; run it from the repository root (`python game_data.py`). Output CSVs are written under `data/`.
+- **Analysis scripts** in `analysis/` (`player_in_goals.py`, `penalty_ratio.py`, `season_analysis.py`) import `constants`/`game_data` from the root, so run them as modules from the repo root, e.g. `python -m analysis.player_in_goals`.
 - **Graph scripts** in `radars/` and `other_graphs/*/` read a CSV that lives next to the script. Paths are now resolved relative to each script's own location, so you can run them from anywhere (e.g. `python radars/radars_graph.py`).
 
 ## What can you do?
@@ -64,7 +67,7 @@ This graph compares teams/players in many aspects of the game at the same time. 
 ![img](http://i.imgur.com/T8EZ6nl.png)
 
  ### 5. Team & Player Analysis
-The [season_analysis.py](https://github.com/andrebrener/football_data/blob/master/season_analysis.py) script is used to compare teams and [team_players_comparison.py](https://github.com/andrebrener/football_data/blob/master/other_graphs/compare_team_players/team_players_comparison.py) compares the players. After running the scripts, you will get a series un graphs with their comparison in different aspects of the game. The options for these graphs are:
+The [season_analysis.py](https://github.com/andrebrener/football_data/blob/master/analysis/season_analysis.py) script is used to compare teams and [team_players_comparison.py](https://github.com/andrebrener/football_data/blob/master/other_graphs/compare_team_players/team_players_comparison.py) compares the players. After running the scripts, you will get a series un graphs with their comparison in different aspects of the game. The options for these graphs are:
 - Change titles and subtitles of graphs.
 - Define a team/player that you want to be remarked from the rest.
 - The maximum number of teams/players in the graph.
@@ -76,7 +79,7 @@ The [season_analysis.py](https://github.com/andrebrener/football_data/blob/maste
 - Insert Constants in constants.py.
   - Select start & end dates.
   - Select competition from the competition dictionary.
-- Run [player_in_goals.py](https://github.com/andrebrener/football_data/blob/master/player_in_goals.py).
+- Run [player_in_goals.py](https://github.com/andrebrener/football_data/blob/master/analysis/player_in_goals.py) from the repo root: `python -m analysis.player_in_goals`.
 - A directory named `player_in_goals` will be created in the repo with a csv file named `games_data_{start_date}_{end_date}.csv`.
 - This csv will contain the data for the players of the selected competition and dates including:
   - Name and team of the player. More than one player with exactly the same name in the same team will make that data invalid.
